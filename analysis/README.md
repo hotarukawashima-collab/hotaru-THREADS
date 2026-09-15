@@ -10,6 +10,19 @@ Windowsのパソコンで Claude Code(黒い画面)を開いて、上から順�
 > スタートボタンを右クリック →「ターミナル」または「Windows PowerShell」を開き、
 > このプロジェクトのフォルダに移動してから `claude` と入力してEnter。
 >
+> ### 【重要】VS Codeの中のターミナルは使わないでください
+>
+> VS Code内蔵のターミナルで `claude` を動かすと、
+> VS Code自身のログ(`update#setState`、`Extension host with pid ... exited` など)が
+> 同じ画面に流れ込み、**Claude Codeの表示が壊れて操作できなくなります**。
+>
+> **必ずスタートボタンから開いた独立したPowerShell**を使ってください。
+> VS Codeはこの作業では一切使いません(分析結果を読みたいときだけ開けば十分です)。
+>
+> 起動すると「このフォルダを信頼しますか」と聞かれます。
+> **マウスでは選べません。↓キーで `Yes, I trust this folder` に移動してEnter**です。
+> Claude Codeの選択画面はすべてこの操作になります。
+>
 > ```powershell
 > cd $HOME\Desktop\hotaru-THREADS
 > claude
@@ -125,57 +138,111 @@ claude
 
 ## ①スクショを入れる
 
-### 1-1. iPhoneのスクショをWindowsに移す
+### 1-1. スクショをパソコンに用意する
 
-一番確実なのは **USBケーブルで繋ぐ方法**です。
+**すでにパソコンのフォルダに入れてある場合は、1-2へ進んでください。**
+
+まだiPhoneの中にある場合は、USBケーブルで繋ぐのが確実です。
 
 1. iPhoneをUSBケーブルでパソコンに繋ぐ
 2. iPhoneの画面に「このコンピュータを信頼しますか?」と出たら「**信頼**」をタップ
-   (ここでロック解除しておかないと、パソコン側でフォルダが空に見えます)
-3. パソコンで「エクスプローラー」を開く → 左側の「**PC**」の下に `Apple iPhone` が出る
-4. `Apple iPhone` → `Internal Storage` → `DCIM` の中に写真が入っています
-5. スクショを探して、全部コピーする
+   (このとき**iPhoneのロックを解除しておいてください**。
+   ロックしたままだとパソコン側でフォルダが空に見えます)
+3. エクスプローラー → 左の「**PC**」の下の `Apple iPhone`
+   → `Internal Storage` → `DCIM`
+4. 中がフォルダだらけで見つからない場合は、
+   **エクスプローラー右上の検索窓に `.png` と入力**してください。
+   iPhoneのスクショはPNG、写真はJPGなので、これでスクショだけ絞り込めます。
 
-> **DCIMの中がフォルダだらけで見つからない場合:**
-> エクスプローラーの検索窓(右上)に `.png` と入れて検索してください。
-> iPhoneのスクショはPNG形式、写真はJPGなので、これでスクショだけ絞り込めます。
+**ケーブルがない場合:** iPhoneからGoogleフォトやGoogleドライブにアップロードして、
+パソコンのブラウザからまとめてダウンロードするのが早いです。
 
-**ケーブルがない / うまくいかない場合:** iPhoneのGoogleフォトやGoogleドライブに
-スクショをアップロードして、パソコンのブラウザからまとめてダウンロードするのが早いです。
+### 1-2. 所定のフォルダにコピーする
 
-### 1-2. 所定のフォルダに入れる
+エクスプローラーで95枚をドラッグするのは大変なので、PowerShellでコピーします。
+プロジェクトのフォルダ(`hotaru-THREADS`)でPowerShellを開き、**1行ずつ**実行してください。
 
-コピーしたスクショを、以下のフォルダに貼り付けてください。
-
-- コアラさん → `analysis\accounts\koara\screenshots\`
-- ゆきぴーさん → `analysis\accounts\yukipi\screenshots\`
-
-### 1-3. 連番にリネームする(推奨)
-
-**並び順が分かるように**しておくと、「何枚目まで終わったか」の管理が楽になります。
-
-対象のフォルダをエクスプローラーで開き、アドレスバーに `powershell` と入力してEnter。
-開いた画面に、以下をコピーして貼り付けてEnterを押してください。
+デスクトップに「コアラ」「ゆきぴー」というフォルダで分けてある場合の例:
 
 ```powershell
-$files = Get-ChildItem -File | Where-Object { $_.Extension -match '\.(png|jpg|jpeg)$' } | Sort-Object Name
-$i = 1
-foreach ($f in $files) {
-  Rename-Item $f.FullName -NewName ("koara_{0:D3}{1}" -f $i, $f.Extension.ToLower())
-  $i++
-}
-Write-Host "$($files.Count) 枚のリネームが完了しました"
+Copy-Item "$HOME\Desktop\コアラ\*" -Destination "analysis\accounts\koara\screenshots"
 ```
 
-`koara_001.png` `koara_002.png` … という名前に一括で変わります。
+```powershell
+Copy-Item "$HOME\Desktop\ゆきぴー\*" -Destination "analysis\accounts\yukipi\screenshots"
+```
 
-> **ゆきぴーさんのフォルダで実行するときは**、上の `koara_` の部分を `yukipi_` に
-> 書き換えてから貼り付けてください(2箇所ではなく1箇所だけです)。
+フォルダ名が違う場合は、`\Desktop\` のあとを実際の名前に書き換えてください。
+**コピーなので元のフォルダはそのまま残ります。** 失敗しても元データは無事です。
 
-**スクショを撮った順に並んでいるか、必ず目視で確認してください。**
-iPhoneのファイル名(`IMG_1234.PNG`)は撮影順に番号が付くので、通常はこれで正しく並びます。
-もし順番がおかしければ、`Sort-Object Name` の部分を `Sort-Object LastWriteTime` に変えて
-やり直してください。
+枚数を確認します(これも1行ずつ)。
+
+```powershell
+(Get-ChildItem analysis\accounts\koara\screenshots\* -Include *.png,*.jpg,*.jpeg).Count
+```
+
+```powershell
+(Get-ChildItem analysis\accounts\yukipi\screenshots\* -Include *.png,*.jpg,*.jpeg).Count
+```
+
+数字だけが表示されます。元のフォルダの枚数と一致していればOKです。
+
+> **数が合わない場合**、元フォルダの中身を種類別に数えてみてください。
+> `.heic` が混ざっていると、上のコピーから漏れています。
+>
+> ```powershell
+> Get-ChildItem "$HOME\Desktop\コアラ" -File | Group-Object Extension | Select-Object Count, Name
+> ```
+
+### 1-3. 連番にリネームする
+
+**並び順が分かるように**しておくと、「何枚目まで終わったか」の管理が楽になります。
+また、連投(1/2、2/2のような投稿)を正しくつなげるために、**撮った順に並んでいること**が重要です。
+
+> ### 【重要】PowerShellへの貼り付けは「1行ずつ」
+>
+> 複数行をまとめて貼ると、**改行が飲み込まれて行がくっつき**、
+> 意図しない動作やエラーになります。
+> **1行貼る → Enter → 結果を確認 → 次の1行**、の順で進めてください。
+>
+> 貼る前に、画面が `PS C:\...\hotaru-THREADS>` だけの状態(何も入力されていない)
+> になっているか確認してください。前の入力が残っているとくっつきます。
+
+#### 手順
+
+プロジェクトのフォルダでPowerShellを開き、以下を**1行ずつ**実行します。
+
+**①並び順を確認する**
+
+```powershell
+Get-ChildItem analysis\accounts\koara\screenshots\* -Include *.png | Sort-Object Name | Select-Object -First 5 Name, LastWriteTime
+```
+
+`IMG_9337.PNG` のように**桁数の揃った連番**で、日時も順に並んでいればOK。
+名前がバラバラな場合は、次の②③の `Sort-Object Name` を
+`Sort-Object LastWriteTime` に書き換えてください。
+
+**②コアラをリネームする**
+
+```powershell
+$i=1; (Get-ChildItem analysis\accounts\koara\screenshots\* -Include *.png | Sort-Object Name) | ForEach-Object { Rename-Item $_.FullName -NewName ("koara_{0:D3}.png" -f $i); $i++ }
+```
+
+**③確認する**
+
+```powershell
+Get-ChildItem analysis\accounts\koara\screenshots\* -Include *.png | Select-Object -First 3 Name
+```
+
+`koara_001.png` `koara_002.png` `koara_003.png` と出れば成功です。
+
+**④ゆきぴーをリネームする**
+
+```powershell
+$i=1; (Get-ChildItem analysis\accounts\yukipi\screenshots\* -Include *.png | Sort-Object Name) | ForEach-Object { Rename-Item $_.FullName -NewName ("yukipi_{0:D3}.png" -f $i); $i++ }
+```
+
+デスクトップの元フォルダを残しておけば、失敗しても何度でもやり直せます。
 
 ### 注意
 
