@@ -1,0 +1,17 @@
+{
+  "account": "yukipi",
+  "display_name": "ゆきぴー｜引き寄せちゃん",
+  "handle": "yukipe_50",
+  "icon": "ひよこ風キャラの線画(ハートを抱えている・白背景)",
+  "bio": "「わたしなんか」が口癖だった元どん底女子。執着を手放したら現実が動く話。追いかけるほど逃げる恋の抜け出し方。エネルギーや見えないもののやさしい感じ方。どん底で師匠に会って、試して効いたやつだ(以降は「続きを読む」で省略・未取得)",
+  "bio_line_count": null,
+  "link": "cut-gorgonzola-fd2.notion.site/",
+  "link_label": null,
+  "topic_tags": ["引き寄せの法則", "ツインレイ"],
+  "followers": 1111,
+  "recent_views": 470000,
+  "views_per_follower": 423,
+  "captured_at": null,
+  "source_files": ["yukipi_profile.png"],
+  "notes": "display_name, bio, link, topic_tags, followers, recent_views, views_per_followerはユーザーからの指示で追記(yukipi_profile.png単体からは確認できなかったヘッダー部分の情報。別スクショまたはユーザー自身の確認に基づくと思われる)。\n\n- bio_line_countは、bio本文に明示的な改行位置の情報がないため、行数を断定できずnullとした。またbioは末尾に「(以降は「続きを読む」で省略・未取得)」とある通り、Threadsの「続きを読む」で折りたたまれた続きの文章が未取得であり、全文ではない点に注意。\n- link_labelは指示されておらず未確認のためnullのまま。\n- handleは投稿者名表示から「yukipe_50」と読み取れる(フォルダ名・posts.jsonlのaccount値は「yukipi」で表記が異なる点に注意、display_nameとは別)。\n- captured_atは未確認のためnullのまま。\n\n画像(yukipi_profile.png)で確認できるピン留め投稿の内容(参考情報。posts.jsonlには未収録のためここに記載): 2件スレッド(1/2, 2/2)。1/2の本文は「引き寄せのことわかっているようでわかっていない人が多いので、誰でもわかる入門書を書きました。入門書とはいえ、結構くわしく書いたから、全部マスターすれば、あなたもきっと引き寄せられるよ。受け取り方はオプチャにあるので下のリンクからきてね。」(likes9, replies1)で、「世界で一番やさしい引き寄せ入門書」というタイトルカード画像(ハート型を抱えたキャラクターのイラスト)を添付。2/2は「cut-gorgonzola-fd2.notion.site/34cb0...」というNotionサイトへのリンクカードのみ。bioのlinkと同一ドメイン。"
+}
