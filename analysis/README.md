@@ -10,6 +10,19 @@ Windowsのパソコンで Claude Code(黒い画面)を開いて、上から順�
 > スタートボタンを右クリック →「ターミナル」または「Windows PowerShell」を開き、
 > このプロジェクトのフォルダに移動してから `claude` と入力してEnter。
 >
+> ### 【重要】VS Codeの中のターミナルは使わないでください
+>
+> VS Code内蔵のターミナルで `claude` を動かすと、
+> VS Code自身のログ(`update#setState`、`Extension host with pid ... exited` など)が
+> 同じ画面に流れ込み、**Claude Codeの表示が壊れて操作できなくなります**。
+>
+> **必ずスタートボタンから開いた独立したPowerShell**を使ってください。
+> VS Codeはこの作業では一切使いません(分析結果を読みたいときだけ開けば十分です)。
+>
+> 起動すると「このフォルダを信頼しますか」と聞かれます。
+> **マウスでは選べません。↓キーで `Yes, I trust this folder` に移動してEnter**です。
+> Claude Codeの選択画面はすべてこの操作になります。
+>
 > ```powershell
 > cd $HOME\Desktop\hotaru-THREADS
 > claude
