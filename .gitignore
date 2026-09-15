@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 .venv/
+
+# スクショ画像そのものはGitに上げない(容量が大きいため)
+analysis/accounts/*/screenshots/*
+!analysis/accounts/*/screenshots/.gitkeep

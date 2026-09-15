@@ -89,3 +89,18 @@ python3 generate_posts.py
   → Vaultフォルダの場所(パス)が間違っています。Obsidianの「Vaultを開く」画面などで正確な場所を確認してください。
 - `エラー: 入力フォルダが見つかりません`
   → Vaultの中に、`.env` の `INPUT_FOLDER` と同じ名前のフォルダを作ってください。
+
+## 7. アカウント分析 → ナレッジ作り
+
+参考アカウントのスクショを分析して、新アカウント(引き寄せ×夫婦仲)の設計図を作る手順は
+`analysis/README.md` にまとめてあります。
+
+```
+①スクショを入れる  → analysis/accounts/◯◯/screenshots/
+②書き起こし        → posts.jsonl(15枚ずつ、Claude Codeに読ませる)
+③分析              → analysis.md
+④設計              → knowledge/(新アカウントの設計図)
+⑤運用              → knowledge/ を generate_posts.py に反映
+```
+
+`knowledge/05_NGリスト.md` だけは、分析結果より優先される安全ルールです。必ず目を通してください。
