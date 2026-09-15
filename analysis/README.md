@@ -25,6 +25,62 @@ Windowsのパソコンで Claude Code(黒い画面)を開いて、上から順�
 
 ---
 
+## ⓪パソコンにこのプロジェクトを持ってくる(最初の1回だけ)
+
+### 0-1. Gitが入っているか確認
+
+PowerShellを開いて:
+
+```powershell
+git --version
+```
+
+バージョンが出ればOK。`認識されていません` と出たら、
+[Git for Windows](https://git-scm.com/download/win) をインストールしてください。
+インストーラの選択肢は**全部そのまま「次へ」で構いません**。
+終わったらPowerShellを一度閉じて開き直してから、もう一度確認します。
+
+### 0-2. ダウンロードする
+
+```powershell
+cd $HOME\Desktop
+git clone https://github.com/hotarukawashima-collab/hotaru-THREADS.git
+cd hotaru-THREADS
+git checkout claude/pensive-keller-eqi6gn
+```
+
+途中でブラウザが開いてGitHubのログインを求められたら、ログインして許可してください
+(初回だけです。次からは聞かれません)。
+
+デスクトップに `hotaru-THREADS` フォルダができて、
+その中に `analysis` と `knowledge` のフォルダが入っていれば成功です。
+
+> **最後の `git checkout` を忘れないでください。** これを実行しないと、
+> `analysis` や `knowledge` のフォルダが見当たらない状態になります。
+
+### 0-3. Claude Codeを起動する
+
+```powershell
+claude
+```
+
+これで準備完了です。以降はこの画面にお話しするだけで進みます。
+
+> **Pythonはまだ要りません。** ①〜④(スクショの分析とナレッジ作り)は
+> Claude Codeだけで完結します。Pythonが必要になるのは⑤の運用からなので、
+> そのときに `README.md` の「3. セットアップ手順」をやれば大丈夫です。
+
+### 作業を中断して、また次の日に再開するとき
+
+```powershell
+cd $HOME\Desktop\hotaru-THREADS
+claude
+```
+
+この2行だけです。0-1と0-2はもうやらなくて構いません。
+
+---
+
 ## 全体の流れ
 
 ```
