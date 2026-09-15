@@ -3,8 +3,25 @@
 コアラさん(土台)とゆきぴーさん(類似)のThreadsアカウントを分析して、
 「引き寄せ × 夫婦仲」の新アカウントの設計図(ナレッジ)を作るための手順書です。
 
-パソコンでClaude Code(黒い画面)を開いて、上から順に進めてください。
+Windowsのパソコンで Claude Code(黒い画面)を開いて、上から順に進めてください。
 専門知識は要りません。**Claudeに話しかけるだけ**です。
+
+> **Claude Codeの開き方(Windows):**
+> スタートボタンを右クリック →「ターミナル」または「Windows PowerShell」を開き、
+> このプロジェクトのフォルダに移動してから `claude` と入力してEnter。
+>
+> ```powershell
+> cd $HOME\Desktop\hotaru-THREADS
+> claude
+> ```
+>
+> Claude Codeをまだ入れていない場合は、先に以下を実行してください(初回だけ)。
+>
+> ```powershell
+> npm install -g @anthropic-ai/claude-code
+> ```
+>
+> (`npm` が無いと言われたら、先に [Node.js](https://nodejs.org/) をインストールしてください)
 
 ---
 
@@ -30,23 +47,62 @@
 
 ## ①スクショを入れる
 
-Macのフォルダに、撮ったスクショをそのままドラッグして入れてください。
+### 1-1. iPhoneのスクショをWindowsに移す
 
-- コアラさん → `analysis/accounts/koara/screenshots/`
-- ゆきぴーさん → `analysis/accounts/yukipi/screenshots/`
+一番確実なのは **USBケーブルで繋ぐ方法**です。
 
-### ファイル名について
+1. iPhoneをUSBケーブルでパソコンに繋ぐ
+2. iPhoneの画面に「このコンピュータを信頼しますか?」と出たら「**信頼**」をタップ
+   (ここでロック解除しておかないと、パソコン側でフォルダが空に見えます)
+3. パソコンで「エクスプローラー」を開く → 左側の「**PC**」の下に `Apple iPhone` が出る
+4. `Apple iPhone` → `Internal Storage` → `DCIM` の中に写真が入っています
+5. スクショを探して、全部コピーする
 
-**並び順が分かるように**しておくと、あとで「何枚目まで終わったか」が管理しやすくなります。
-Macなら、スクショを全部選んで右クリック →「名称変更」→「フォーマット:名前と番号」で
-`koara_001.png` `koara_002.png` ... のように一括で変えられます。
+> **DCIMの中がフォルダだらけで見つからない場合:**
+> エクスプローラーの検索窓(右上)に `.png` と入れて検索してください。
+> iPhoneのスクショはPNG形式、写真はJPGなので、これでスクショだけ絞り込めます。
 
-撮った順(＝アカウントを上からスクロールした順)になっていればOKです。
+**ケーブルがない / うまくいかない場合:** iPhoneのGoogleフォトやGoogleドライブに
+スクショをアップロードして、パソコンのブラウザからまとめてダウンロードするのが早いです。
+
+### 1-2. 所定のフォルダに入れる
+
+コピーしたスクショを、以下のフォルダに貼り付けてください。
+
+- コアラさん → `analysis\accounts\koara\screenshots\`
+- ゆきぴーさん → `analysis\accounts\yukipi\screenshots\`
+
+### 1-3. 連番にリネームする(推奨)
+
+**並び順が分かるように**しておくと、「何枚目まで終わったか」の管理が楽になります。
+
+対象のフォルダをエクスプローラーで開き、アドレスバーに `powershell` と入力してEnter。
+開いた画面に、以下をコピーして貼り付けてEnterを押してください。
+
+```powershell
+$files = Get-ChildItem -File | Where-Object { $_.Extension -match '\.(png|jpg|jpeg)$' } | Sort-Object Name
+$i = 1
+foreach ($f in $files) {
+  Rename-Item $f.FullName -NewName ("koara_{0:D3}{1}" -f $i, $f.Extension.ToLower())
+  $i++
+}
+Write-Host "$($files.Count) 枚のリネームが完了しました"
+```
+
+`koara_001.png` `koara_002.png` … という名前に一括で変わります。
+
+> **ゆきぴーさんのフォルダで実行するときは**、上の `koara_` の部分を `yukipi_` に
+> 書き換えてから貼り付けてください(2箇所ではなく1箇所だけです)。
+
+**スクショを撮った順に並んでいるか、必ず目視で確認してください。**
+iPhoneのファイル名(`IMG_1234.PNG`)は撮影順に番号が付くので、通常はこれで正しく並びます。
+もし順番がおかしければ、`Sort-Object Name` の部分を `Sort-Object LastWriteTime` に変えて
+やり直してください。
 
 ### 注意
 
 スクショ画像そのものはGitHubには保存されません(容量が大きいため)。
-Macの中にだけ置いておく形になります。書き起こした文字データの方が保存されます。
+パソコンの中にだけ置いておく形になります。書き起こした文字データの方が保存されます。
 
 ---
 

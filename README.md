@@ -16,10 +16,17 @@ Obsidianに書いたメモから、Threads(SNS)の投稿文をClaudeが自動で
 
 ## 2. 事前に必要なもの
 
-- パソコン(Mac または Windows)
+- パソコン(このプロジェクトは **Windows** 前提で書いています)
 - [Python](https://www.python.org/downloads/) (バージョン3.10以上)
-  - すでに入っているか不安な場合は、ターミナル(Mac)またはコマンドプロンプト(Windows)で
-    `python3 --version` と入力してみてください。バージョンが表示されればOKです。
+  - すでに入っているか不安な場合は、**PowerShell** を開いて
+    `python --version` と入力してみてください。バージョンが表示されればOKです。
+  - **インストール時の注意:** インストーラの最初の画面で
+    「**Add python.exe to PATH**」のチェックを必ず入れてください。
+    ここを入れ忘れると、あとで `python は認識されていません` というエラーが出ます。
+
+> **PowerShellの開き方:** スタートボタンを右クリック →「ターミナル」または「Windows PowerShell」。
+> もしくは、対象フォルダをエクスプローラーで開いて、
+> アドレスバーに `powershell` と入力してEnterでも開けます(そのフォルダで開くので便利です)。
 - Claude(Anthropic)のAPIキー
   - https://console.anthropic.com/ にアクセスし、アカウントを作成 → 「API Keys」から発行できます。
   - このキーは他人に見せないでください(自分のClaude利用料金に直結する、いわば「合鍵」です)。
@@ -34,20 +41,21 @@ Obsidianに書いたメモから、Threads(SNS)の投稿文をClaudeが自動で
 
 ### 3-2. 必要な部品をインストールする
 
-ターミナル(Mac)またはコマンドプロンプト(Windows)を開き、
-上記のフォルダに移動してから、次のコマンドを実行します。
+PowerShellを開き、上記のフォルダに移動してから、次のコマンドを実行します。
 
-```bash
-cd デスクトップ/hotaru-THREADS のように、置いた場所まで移動
-pip3 install -r requirements.txt
+```powershell
+cd $HOME\Desktop\hotaru-THREADS
+pip install -r requirements.txt
 ```
+
+(デスクトップ以外に置いた場合は、`cd` のあとをその場所に変えてください)
 
 ### 3-3. 設定ファイルを作る
 
 `.env.example` というファイルをコピーして、`.env` という名前のファイルを作ります。
 
-```bash
-cp .env.example .env
+```powershell
+copy .env.example .env
 ```
 
 作った `.env` をテキストエディタ(メモ帳など)で開き、以下を書き換えます。
@@ -60,10 +68,10 @@ cp .env.example .env
 ## 4. 使い方
 
 1. Obsidianの「投稿ネタ」フォルダに、投稿したい内容のメモ(Markdownノート)を書く。
-2. ターミナル/コマンドプロンプトで、プロジェクトのフォルダに移動し、次を実行する。
+2. PowerShellで、プロジェクトのフォルダに移動し、次を実行する。
 
-```bash
-python3 generate_posts.py
+```powershell
+python generate_posts.py
 ```
 
 3. 「生成中: ○○.md」のように表示され、完了すると
@@ -76,10 +84,10 @@ python3 generate_posts.py
 「メモを書いたら実行するのも忘れそう」という場合は、パソコンのスケジュール機能を使って、
 毎日決まった時間に自動実行することもできます。
 
-- Mac: `cron` や `launchd`
-- Windows: 「タスクスケジューラ」
+Windowsなら「**タスクスケジューラ**」(スタートメニューで「タスク」と検索すると出てきます)で、
+毎日決まった時間に `python generate_posts.py` を実行する設定ができます。
 
-設定方法が分からない場合は、そのままお知らせください。使っているパソコンに合わせて手順をご案内します。
+設定方法が分からない場合は、そのままお知らせください。手順をご案内します。
 
 ## 6. うまくいかないとき
 
@@ -89,6 +97,11 @@ python3 generate_posts.py
   → Vaultフォルダの場所(パス)が間違っています。Obsidianの「Vaultを開く」画面などで正確な場所を確認してください。
 - `エラー: 入力フォルダが見つかりません`
   → Vaultの中に、`.env` の `INPUT_FOLDER` と同じ名前のフォルダを作ってください。
+- `python は、内部コマンドまたは外部コマンド〜として認識されていません`
+  → Pythonのインストール時に「Add python.exe to PATH」のチェックが入っていません。
+    Pythonをもう一度インストールし直して、最初の画面でチェックを入れてください。
+- `pip は認識されていません`
+  → 上と同じ原因です。応急処置として `py -m pip install -r requirements.txt` でも動きます。
 
 ## 7. アカウント分析 → ナレッジ作り
 
