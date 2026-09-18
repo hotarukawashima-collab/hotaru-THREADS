@@ -111,7 +111,7 @@ const FIGS = [
 
 // ── fig4 だったら : ゴールとの「距離」が意味 ──────────────────────
 { file:'fig4_だったら', sub:'ステップ2 ── だったらゲーム', title:'外から願うか、中から見るか',
-  svg:`<svg viewBox="0 0 1152 530" xmlns="http://www.w3.org/2000/svg">
+  svg:`<svg viewBox="0 0 1152 576" xmlns="http://www.w3.org/2000/svg">
   <text class="t" x="0" y="30" font-size="27" fill="${C.r}">いままで</text>
   <circle cx="820" cy="150" r="118" fill="none" stroke="${C.rLine}" stroke-width="5" stroke-dasharray="14 12"/>
   <text class="t" x="820" y="140" font-size="27" fill="${C.r}" text-anchor="middle">仲のいい</text>
