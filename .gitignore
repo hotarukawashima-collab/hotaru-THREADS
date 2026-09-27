@@ -6,3 +6,6 @@ __pycache__/
 # スクショ画像そのものはGitに上げない(容量が大きいため)
 analysis/accounts/*/screenshots/*
 !analysis/accounts/*/screenshots/.gitkeep
+
+# 受け渡し用にまとめたzip。中身は全部リポジトリに入っているので追跡しない
+*.zip
