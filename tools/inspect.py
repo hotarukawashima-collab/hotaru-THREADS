@@ -67,6 +67,10 @@ CONFIG = {
     # 5. 絵文字
     'EMOJI_MAX': 2,
 
+    # 5b. 引き寄せ語:1つも無いと、ただの人生アドバイスになる
+    #     このアカウントは「引き寄せ × 夫婦仲」。引き寄せが主。
+    'CORE_WORDS': ['決め', '決ま', '叶', '宇宙', '世界', '設定', '許可', '前提'],
+
     # 6/7. しきい値
     'DUP_RATIO': 0.62,      # 過去投稿との類似度
     'REF_MAX_MATCH': 20,    # 参考アカウントとの連続一致(字)
@@ -125,6 +129,11 @@ def check(body, typ, past, refs, cfg):
     lo, hi = cfg['LEN_BY_TYPE'].get(typ, cfg['LEN_DEFAULT'])
     if not (lo <= len(flat) <= hi):
         ng.append(('字数', '%d字。%sの適正は%d〜%d字' % (len(flat), typ, lo, hi)))
+
+    # 5b. 引き寄せ語
+    if cfg.get('CORE_WORDS') and not any(w in flat for w in cfg['CORE_WORDS']):
+        ng.append(('引き寄せ', '引き寄せ語(%s)が1つも無い。一般的な人生アドバイスになっている'
+                   % '/'.join(cfg['CORE_WORDS'][:4])))
 
     # 5. 絵文字
     n = len(EMOJI.findall(flat))
