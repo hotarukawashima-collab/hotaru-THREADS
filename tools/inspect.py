@@ -11,8 +11,9 @@
   3. 抽象語     中身の代わりに指し示す語を置いていないか
   4. 字数帯     型ごとの適正字数
   5. 絵文字     数と位置
-  6. 重複       過去の投稿と近すぎないか
+  6. 重複       過去の投稿と近すぎないか(文字の一致)
   7. 一致       参考アカウントの原文との連続一致
+  8. 主張の重複 直近N日で、言い方を変えて同じことを言っていないか
 """
 import sys, os, re, json, glob, runpy
 from difflib import SequenceMatcher
@@ -52,6 +53,26 @@ CONFIG = {
         (r'ほど[^。\n]{0,10}(戻る|良くなる|うまくいく)',
          '「〜ほど良くなる」は根拠のない逆張り'),
     ],
+
+    # 8. 主張の重複:文字が違っても、同じことを言っていないか
+    #    「1日7本は7つ違うことを言う」を、日をまたいで効かせるための検査。
+    #    6の重複検査は文字の一致を見るので、言い方を変えた繰り返しは素通りする。
+    'CLAIM_CONCEPTS': {
+        '決める':   ['決め', '決ま'],
+        '世界':     ['世界'],
+        '今日の1日': ['今日', 'ただの1日', '1日やで', '1日やから', 'その日'],
+        '夫の態度': ['態度', '機嫌', '冷た', '無視', '優しく', 'キツ'],
+        '我慢':     ['我慢', '耐え'],
+        '証拠':     ['証拠', '確かめ', '確認'],
+        '待つ':     ['待つ', '待っ', 'いつ変わる', 'いつになったら'],
+        'がんばる': ['がんばる', 'がんばっ', '頑張', '力を抜'],
+        '諦め':     ['諦め'],
+        '比べる':   ['比べ', '羨まし', 'よその'],
+        '大丈夫':   ['大丈夫', '安心'],
+        '順番':     ['順番', '先に', 'あとから', 'そっちが先'],
+    },
+    'CLAIM_WINDOW_DAYS': 7,     # 何日さかのぼって見るか
+    'CLAIM_SHARED_MIN': 3,      # 概念がいくつ重なったら「同じことを言っている」とみなすか
 
     # 4. 型ごとの適正字数(実測から)
     'LEN_BY_TYPE': {
@@ -95,7 +116,13 @@ def load_posts(path):
     ns = runpy.run_path(path)
     return ns['POSTS']
 
-def check(body, typ, past, refs, cfg):
+def claim_sig(text, cfg):
+    """本文から「何を言っているか」の概念集合を取り出す。"""
+    return frozenset(name for name, words in cfg.get('CLAIM_CONCEPTS', {}).items()
+                     if any(w in text for w in words))
+
+
+def check(body, typ, past, refs, cfg, day=None, past_dated=None):
     flat = body.replace('\n', '')
     ng = []
 
@@ -147,6 +174,34 @@ def check(body, typ, past, refs, cfg):
             ng.append(('重複', '過去投稿と%.0f%%一致: %s' % (r*100, p.replace('\n','/')[:28])))
             break
 
+    # 8. 主張の重複(日付が分かるときだけ)
+    if day and past_dated and cfg.get('CLAIM_CONCEPTS'):
+        import datetime
+        try:
+            d0 = datetime.date.fromisoformat(day)
+        except ValueError:
+            d0 = None
+        if d0:
+            sig = claim_sig(flat, cfg)
+            win = cfg.get('CLAIM_WINDOW_DAYS', 7)
+            need = cfg.get('CLAIM_SHARED_MIN', 3)
+            best = None
+            for pd, pb in past_dated:
+                try:
+                    d1 = datetime.date.fromisoformat(pd)
+                except ValueError:
+                    continue
+                if not (0 < (d0 - d1).days <= win):
+                    continue
+                shared = sig & claim_sig(pb.replace('\n', ''), cfg)
+                if len(shared) >= need and (best is None or len(shared) > len(best[0])):
+                    best = (shared, pd, pb)
+            if best:
+                shared, pd, pb = best
+                ng.append(('主張重複',
+                           '%s に同じことを言っている(%s): %s'
+                           % (pd, '+'.join(sorted(shared)), pb.replace('\n', '/')[:26])))
+
     # 7. 参考アカウントとの一致
     sz, frag = 0, ''
     for t in refs:
@@ -162,18 +217,20 @@ def main():
     refs = load_refs()
     if sys.argv[1] == '--text':
         rows = [('-', '-', '型4', sys.argv[2])]
-        past = []
+        past, past_dated = [], []
     else:
         posts = load_posts(sys.argv[1])
         day = sys.argv[2] if len(sys.argv) > 2 else None
         rows = [(d, tm, ty, b) for d, tm, ty, th, ko, b in posts if not day or d == day]
         past = [b for d, tm, ty, th, ko, b in posts if not day or d != day]
+        past_dated = [(d, b) for d, tm, ty, th, ko, b in posts if not day or d != day]
 
     bad = 0
     print('%-11s %-6s %-5s %5s %5s  %s' % ('日付','時刻','型','字数','一致','判定'))
     print('-'*78)
     for d, tm, ty, b in rows:
-        ng, ln, sz = check(b, ty, past, refs, cfg)
+        ng, ln, sz = check(b, ty, past, refs, cfg, day=d if d != '-' else None,
+                           past_dated=past_dated)
         print('%-11s %-6s %-5s %5d %4d字  %s' % (d, tm, ty, ln, sz, 'OK' if not ng else '✕ %d件' % len(ng)))
         for cat, msg in ng:
             print('%31s[%s] %s' % ('', cat, msg))

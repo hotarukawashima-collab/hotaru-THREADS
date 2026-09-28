@@ -84,7 +84,7 @@ $ python3 tools/inspect.py contents/_posts35_source.py 2026-09-25
 問題 1件
 ```
 
-### 7つの検査
+### 8つの検査
 
 | # | 検査 | 何を見るか | しきい値 |
 |---|---|---|---|
