@@ -10,7 +10,7 @@
   2. NG語       結果を保証する語・自己責任に落とす語
   3. 抽象語     中身の代わりに指し示す語を置いていないか
   4. 字数帯     型ごとの適正字数
-  5. 絵文字     数と位置
+  5. 絵文字     数と位置(引き寄せ語の有無も、ここで見る)
   6. 重複       過去の投稿と近すぎないか(文字の一致)
   7. 一致       参考アカウントの原文との連続一致
   8. 主張の重複 直近N日で、言い方を変えて同じことを言っていないか
@@ -158,7 +158,10 @@ def check(body, typ, past, refs, cfg, day=None, past_dated=None):
         ng.append(('字数', '%d字。%sの適正は%d〜%d字' % (len(flat), typ, lo, hi)))
 
     # 5b. 引き寄せ語
-    if cfg.get('CORE_WORDS') and not any(w in flat for w in cfg['CORE_WORDS']):
+    #     対話型は「宇宙「」」が話者名なので、そのままだと必ず通ってしまう。
+    #     話者名を取り除いてから判定する(2026-09-30に素通りが見つかった)。
+    core_probe = re.sub(r'宇宙\s*(?=[「『])', '', flat)
+    if cfg.get('CORE_WORDS') and not any(w in core_probe for w in cfg['CORE_WORDS']):
         ng.append(('引き寄せ', '引き寄せ語(%s)が1つも無い。一般的な人生アドバイスになっている'
                    % '/'.join(cfg['CORE_WORDS'][:4])))
 
