@@ -14,6 +14,7 @@
   6. 重複       過去の投稿と近すぎないか(文字の一致)
   7. 一致       参考アカウントの原文との連続一致
   8. 主張の重複 直近N日で、言い方を変えて同じことを言っていないか
+  9. マンネリ   同じ語・同じ締めを使い回していないか(その日と直近3日をまとめて見る)
 """
 import sys, os, re, json, glob, runpy
 from difflib import SequenceMatcher
@@ -71,6 +72,17 @@ CONFIG = {
         '大丈夫':   ['大丈夫', '安心'],
         '順番':     ['順番', '先に', 'あとから', 'そっちが先'],
     },
+    # 9. マンネリ:同じ語を毎日使っていないか。
+    #    8の主張重複は概念が3つ重なって初めて止まるので、
+    #    「全部が決めるの話」のような一語の連投は素通りしていた(2026-09-30に発覚)。
+    'MONOTONY_WORDS': ['決め', '決ま', 'もう仲がいい', 'うちはもう仲がいい',
+                       '大丈夫', 'ええんよ', 'からね'],
+    'MONO_SAMEDAY_MAX': 4,      # その日7本のうち、同じ語を含んでよい本数
+    'MONO_RECENT_DAYS': 3,      # 直近何日をまとめて見るか
+    'MONO_RECENT_RATIO': 0.6,   # 直近の投稿のうち、同じ語を含んでよい割合
+    'MONO_TAIL_LEN': 6,         # 締めの何字を「同じ締め」とみなすか
+    'MONO_TAIL_MAX': 2,         # 直近で、同じ締めを使ってよい本数
+
     'CLAIM_WINDOW_DAYS': 7,     # 何日さかのぼって見るか
     'CLAIM_SHARED_MIN': 3,      # 概念がいくつ重なったら「同じことを言っている」とみなすか
 
@@ -215,6 +227,59 @@ def check(body, typ, past, refs, cfg, day=None, past_dated=None):
 
     return ng, len(flat), sz
 
+def monotony(rows, past_dated, cfg, day):
+    """その日の7本と直近N日をまとめて見る。1本ごとではなく、束の性質を見る検査。"""
+    import datetime
+    from collections import Counter
+    out = []
+    bodies = [b.replace('\n', '') for _, _, _, b in rows]
+    if not bodies:
+        return out
+
+    # (a) その日の中での連投
+    for w in cfg.get('MONOTONY_WORDS', []):
+        n = sum(1 for b in bodies if w in b)
+        if n > cfg['MONO_SAMEDAY_MAX']:
+            out.append('「%s」が%d本中%d本。同じ日に%d本まで' % (w, len(bodies), n, cfg['MONO_SAMEDAY_MAX']))
+
+    try:
+        d0 = datetime.date.fromisoformat(day)
+    except (ValueError, TypeError):
+        return out
+
+    win = cfg.get('MONO_RECENT_DAYS', 3)
+    recent = [b.replace('\n', '') for pd, b in past_dated
+              if _within(pd, d0, win)] + bodies
+    if len(recent) < 7:
+        return out
+
+    # (b) 直近N日での出現率
+    for w in cfg.get('MONOTONY_WORDS', []):
+        n = sum(1 for b in recent if w in b)
+        r = n / len(recent)
+        if r > cfg['MONO_RECENT_RATIO']:
+            out.append('「%s」が直近%d日の%d本中%d本(%.0f%%)。%.0f%%まで'
+                       % (w, win, len(recent), n, r*100, cfg['MONO_RECENT_RATIO']*100))
+
+    # (c) 同じ締め
+    tl = cfg.get('MONO_TAIL_LEN', 6)
+    c = Counter(b.strip()[-tl:] for b in recent)
+    for tail, n in c.most_common(3):
+        if n > cfg.get('MONO_TAIL_MAX', 2):
+            out.append('締めが「…%s」の投稿が直近%d日で%d本。%d本まで'
+                       % (tail, win, n, cfg['MONO_TAIL_MAX']))
+    return out
+
+
+def _within(pd, d0, win):
+    import datetime
+    try:
+        d1 = datetime.date.fromisoformat(pd)
+    except ValueError:
+        return False
+    return 0 < (d0 - d1).days <= win
+
+
 def main():
     cfg = CONFIG
     refs = load_refs()
@@ -239,6 +304,16 @@ def main():
             print('%31s[%s] %s' % ('', cat, msg))
             bad += 1
     print('-'*78)
+
+    # 9. マンネリ(その日の束としての検査)
+    day_id = rows[0][0] if rows and rows[0][0] != '-' else None
+    mono = monotony(rows, past_dated, cfg, day_id) if day_id else []
+    for msg in mono:
+        print('  [マンネリ] %s' % msg)
+        bad += 1
+    if mono:
+        print('-'*78)
+
     print('問題 %d件' % bad)
     return 1 if bad else 0
 
