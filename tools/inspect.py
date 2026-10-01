@@ -77,8 +77,19 @@ CONFIG = {
     #    「全部が決めるの話」のような一語の連投は素通りしていた(2026-09-30に発覚)。
     #    語を足すときの考え方:「決め」を減らしたら「叶」が5/7になった(2026-10-01)。
     #    1つ塞ぐと別の語に寄るので、核になりうる語は先に全部並べておく。
-    'MONOTONY_WORDS': ['決め', '決ま', '叶', 'もう仲がいい', 'うちはもう仲がいい',
-                       '大丈夫', 'ええんよ', 'からね', '世界', '前提', '許可'],
+    #    同じ概念は配列にまとめて、合計で数える。
+    #    「決め」と「決ま」を別々に数えていたため、合計5本でも素通りしていた(2026-10-02)。
+    'MONOTONY_WORDS': [
+        ['決め', '決ま', '決まっ'],      # 決める
+        ['叶'],
+        ['もう仲がいい', 'うちはもう仲がいい'],
+        ['大丈夫', 'だいじょうぶ'],
+        ['ええんよ', 'ええからね', 'ええやで'],
+        ['からね'],
+        ['世界'],
+        ['前提'],
+        ['許可'],
+    ],
     'MONO_SAMEDAY_MAX': 4,      # その日7本のうち、同じ語を含んでよい本数
     'MONO_RECENT_DAYS': 3,      # 直近何日をまとめて見るか
     'MONO_RECENT_RATIO': 0.6,   # 直近の投稿のうち、同じ語を含んでよい割合
@@ -238,11 +249,17 @@ def monotony(rows, past_dated, cfg, day):
     if not bodies:
         return out
 
+    def _grp(w):
+        """監視語は文字列でも配列でもよい。配列は同じ概念としてまとめて数える。"""
+        return [w] if isinstance(w, str) else list(w)
+
     # (a) その日の中での連投
     for w in cfg.get('MONOTONY_WORDS', []):
-        n = sum(1 for b in bodies if w in b)
+        g = _grp(w)
+        n = sum(1 for b in bodies if any(x in b for x in g))
         if n > cfg['MONO_SAMEDAY_MAX']:
-            out.append('「%s」が%d本中%d本。同じ日に%d本まで' % (w, len(bodies), n, cfg['MONO_SAMEDAY_MAX']))
+            out.append('「%s」が%d本中%d本。同じ日に%d本まで'
+                       % ('/'.join(g), len(bodies), n, cfg['MONO_SAMEDAY_MAX']))
 
     try:
         d0 = datetime.date.fromisoformat(day)
@@ -257,11 +274,12 @@ def monotony(rows, past_dated, cfg, day):
 
     # (b) 直近N日での出現率
     for w in cfg.get('MONOTONY_WORDS', []):
-        n = sum(1 for b in recent if w in b)
+        g = _grp(w)
+        n = sum(1 for b in recent if any(x in b for x in g))
         r = n / len(recent)
         if r > cfg['MONO_RECENT_RATIO']:
             out.append('「%s」が直近%d日の%d本中%d本(%.0f%%)。%.0f%%まで'
-                       % (w, win, len(recent), n, r*100, cfg['MONO_RECENT_RATIO']*100))
+                       % ('/'.join(g), win, len(recent), n, r*100, cfg['MONO_RECENT_RATIO']*100))
 
     # (c) 同じ締め
     tl = cfg.get('MONO_TAIL_LEN', 6)
