@@ -107,7 +107,9 @@ CONFIG = {
         '型4': (13, 35),    # 予言・一言断言。短いほど強い
         '型6': (39, 90),    # 対話
         '型5': (80, 130),   # 体験談(4要素)
-        '型9': (70, 150),   # ハウツー(箇条書き)。コアラの実測12本は71〜147字
+        '型9': (70, 150),   # ハウツー(箇条書き・単発)。コアラの実測12本は71〜147字
+        '型9a': (20, 55),   # ハウツー連投の1/2。ゆきぴーの実測は23〜50字
+        '型9b': (70, 170),  # ハウツー連投の2/2
         '型1': (30, 60),
         '型2': (40, 85),
         '型3': (40, 70),
@@ -249,7 +251,15 @@ def monotony(rows, past_dated, cfg, day):
     import datetime
     from collections import Counter
     out = []
-    bodies = [b.replace('\n', '') for _, _, _, b in rows]
+    # 連投(型9a + 型9b)は1投稿として数える。2本に割っただけで
+    # 語の出現本数が増えてしまうため(2026-10-03)。
+    bodies = []
+    for _, _, ty, b in rows:
+        flat = b.replace('\n', '')
+        if ty.endswith('b') and bodies:
+            bodies[-1] += flat
+        else:
+            bodies.append(flat)
     if not bodies:
         return out
 
