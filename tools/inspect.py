@@ -64,7 +64,7 @@ CONFIG = {
         '今日の1日': ['今日', 'ただの1日', '1日やで', '1日やから', 'その日', '日も'],
         '夫の態度': ['態度', '機嫌', '冷た', '無視', '優しく', 'キツ', 'きつく',
                    '黙っ', 'そっけな', '返事', '怒っ', 'イラ'],
-        '変わらない': ['変わってへん', '変わらへん', '消えへん', '変わらん', '崩さへん'],
+        '変わらない': ['変わってへん', '変わらへん', '変わらな', '消えへん', '変わらん', '崩さへん'],
         '前提': ['前提'],
         '我慢':     ['我慢', '耐え'],
         '証拠':     ['証拠', '確かめ', '確認'],
@@ -229,16 +229,22 @@ def check(body, typ, past, refs, cfg, day=None, past_dated=None):
             sig = claim_sig(flat, cfg)
             win = cfg.get('CLAIM_WINDOW_DAYS', 7)
             need = cfg.get('CLAIM_SHARED_MIN', 3)
+            # 2026-10-07追加: 同じ日に2つ重なったら、もう同じことを言っている。
+            # 過去7日なら3つまで許すが、同じ日は2つで止める。
+            need_same = cfg.get('CLAIM_SHARED_MIN_SAMEDAY', 2)
             best = None
             for pd, pb in past_dated:
                 try:
                     d1 = datetime.date.fromisoformat(pd)
                 except ValueError:
                     continue
-                if not (0 < (d0 - d1).days <= win):
+                # 2026-10-07修正: 「0 <」だと同じ日どうしを比べていなかった。
+                # 10/7の13:00と18:00で「順番が逆」を2回言ったのが素通りした。
+                if not (0 <= (d0 - d1).days <= win):
                     continue
                 shared = sig & claim_sig(pb.replace('\n', ''), cfg)
-                if len(shared) >= need and (best is None or len(shared) > len(best[0])):
+                lim = need_same if (d0 - d1).days == 0 else need
+                if len(shared) >= lim and (best is None or len(shared) > len(best[0])):
                     best = (shared, pd, pb)
             if best:
                 shared, pd, pb = best
@@ -340,9 +346,12 @@ def main():
     bad = 0
     print('%-11s %-6s %-5s %5s %5s  %s' % ('日付','時刻','型','字数','一致','判定'))
     print('-'*78)
-    for d, tm, ty, b in rows:
+    for idx, (d, tm, ty, b) in enumerate(rows):
+        # 2026-10-07追加: 同じ日の、自分より前の枠も主張重複の比較対象に入れる。
+        # 10/7の13:00と18:00で「順番が逆」を2回言ったのが素通りしたため。
+        same_day_before = [(rd, rb) for rd, rtm, rty, rb in rows[:idx]]
         ng, ln, sz = check(b, ty, past, refs, cfg, day=d if d != '-' else None,
-                           past_dated=past_dated)
+                           past_dated=past_dated + same_day_before)
         print('%-11s %-6s %-5s %5d %4d字  %s' % (d, tm, ty, ln, sz, 'OK' if not ng else '✕ %d件' % len(ng)))
         for cat, msg in ng:
             print('%31s[%s] %s' % ('', cat, msg))
