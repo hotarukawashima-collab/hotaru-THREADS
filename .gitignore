@@ -3,9 +3,12 @@ __pycache__/
 *.pyc
 .venv/
 
-# スクショ画像そのものはGitに上げない(容量が大きいため)
-analysis/accounts/*/screenshots/*
-!analysis/accounts/*/screenshots/.gitkeep
+# スクショ画像
+# 【2026-10-06 変更】以前は容量を理由に全部除外していたが、
+# そのせいで koara / yukipi のスクショが1枚も残っておらず、元画像を見返せない。
+# 参考アカウントの分析は元画像に戻れることが前提なので、追跡する。
+# (76枚で約15MB。gitで扱える範囲)
+!analysis/accounts/*/screenshots/*
 
 # 受け渡し用にまとめたzip。中身は全部リポジトリに入っているので追跡しない
 *.zip
