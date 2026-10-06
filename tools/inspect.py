@@ -162,7 +162,7 @@ def claim_sig(text, cfg):
                      if any(w in text for w in words))
 
 
-def check(body, typ, past, refs, cfg, day=None, past_dated=None):
+def check(body, typ, past, refs, cfg, day=None, past_dated=None, repost=False):
     flat = body.replace('\n', '')
     ng = []
 
@@ -194,14 +194,15 @@ def check(body, typ, past, refs, cfg, day=None, past_dated=None):
 
     # 4. 字数
     lo, hi = cfg['LEN_BY_TYPE'].get(typ, cfg['LEN_DEFAULT'])
-    if not (lo <= len(flat) <= hi):
+    if not repost and not (lo <= len(flat) <= hi):
         ng.append(('字数', '%d字。%sの適正は%d〜%d字' % (len(flat), typ, lo, hi)))
 
     # 5b. 引き寄せ語
     #     対話型は「宇宙「」」が話者名なので、そのままだと必ず通ってしまう。
     #     話者名を取り除いてから判定する(2026-09-30に素通りが見つかった)。
     core_probe = re.sub(r'宇宙\s*(?=[「『])', '', flat)
-    if cfg.get('CORE_WORDS') and not any(w in core_probe for w in cfg['CORE_WORDS']):
+    # 再投稿は元の投稿で成立していたので見ない(knowledge/11_再投稿.md「1字も変えない」)
+    if not repost and cfg.get('CORE_WORDS') and not any(w in core_probe for w in cfg['CORE_WORDS']):
         ng.append(('引き寄せ', '引き寄せ語(%s)が1つも無い。一般的な人生アドバイスになっている'
                    % '/'.join(cfg['CORE_WORDS'][:4])))
 
@@ -211,8 +212,8 @@ def check(body, typ, past, refs, cfg, day=None, past_dated=None):
     if n > emax:
         ng.append(('絵文字', '%d個。%d個まで' % (n, emax)))
 
-    # 6. 重複
-    for p in past:
+    # 6. 重複(再投稿は100%一致するのが正しいので見ない)
+    for p in (() if repost else past):
         r = SequenceMatcher(None, flat, p.replace('\n', '')).ratio()
         if r >= cfg['DUP_RATIO']:
             ng.append(('重複', '過去投稿と%.0f%%一致: %s' % (r*100, p.replace('\n','/')[:28])))
@@ -270,7 +271,7 @@ def monotony(rows, past_dated, cfg, day):
     # 連投(型9a + 型9b)は1投稿として数える。2本に割っただけで
     # 語の出現本数が増えてしまうため(2026-10-03)。
     bodies = []
-    for _, _, ty, b in rows:
+    for _, _, ty, b, _rp in rows:
         flat = b.replace('\n', '')
         if ty.endswith('b') and bodies:
             bodies[-1] += flat
@@ -334,24 +335,24 @@ def main():
     cfg = CONFIG
     refs = load_refs()
     if sys.argv[1] == '--text':
-        rows = [('-', '-', '型4', sys.argv[2])]
+        rows = [('-', '-', '型4', sys.argv[2], False)]
         past, past_dated = [], []
     else:
         posts = load_posts(sys.argv[1])
         day = sys.argv[2] if len(sys.argv) > 2 else None
-        rows = [(d, tm, ty, b) for d, tm, ty, th, ko, b in posts if not day or d == day]
+        rows = [(d, tm, ty, b, '再投稿' in ko) for d, tm, ty, th, ko, b in posts if not day or d == day]
         past = [b for d, tm, ty, th, ko, b in posts if not day or d != day]
         past_dated = [(d, b) for d, tm, ty, th, ko, b in posts if not day or d != day]
 
     bad = 0
     print('%-11s %-6s %-5s %5s %5s  %s' % ('日付','時刻','型','字数','一致','判定'))
     print('-'*78)
-    for idx, (d, tm, ty, b) in enumerate(rows):
+    for idx, (d, tm, ty, b, rp) in enumerate(rows):
         # 2026-10-07追加: 同じ日の、自分より前の枠も主張重複の比較対象に入れる。
         # 10/7の13:00と18:00で「順番が逆」を2回言ったのが素通りしたため。
-        same_day_before = [(rd, rb) for rd, rtm, rty, rb in rows[:idx]]
+        same_day_before = [(rd, rb) for rd, rtm, rty, rb, _ in rows[:idx]]
         ng, ln, sz = check(b, ty, past, refs, cfg, day=d if d != '-' else None,
-                           past_dated=past_dated + same_day_before)
+                           past_dated=past_dated + same_day_before, repost=rp)
         print('%-11s %-6s %-5s %5d %4d字  %s' % (d, tm, ty, ln, sz, 'OK' if not ng else '✕ %d件' % len(ng)))
         for cat, msg in ng:
             print('%31s[%s] %s' % ('', cat, msg))
