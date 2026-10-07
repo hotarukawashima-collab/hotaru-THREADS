@@ -179,7 +179,9 @@ def check(body, typ, past, refs, cfg, day=None, past_dated=None, repost=False):
             ng.append(('NG語', '「%s」%s' % (w, why)))
 
     # 3b. 他人の行動・関係の結果の予言
-    for pat, why in cfg.get('PROMISE_PATTERNS', []):
+    #     再投稿は元の投稿で成立していたので見ない(knowledge/11_再投稿.md「1字も変えない」)。
+    #     最終値の♡2位・♡4位がどちらも「夫婦仲が戻ってくる」で、この検査に当たる。
+    for pat, why in ([] if repost else cfg.get('PROMISE_PATTERNS', [])):
         m = re.search(pat, flat)
         if m:
             ng.append(('予言', '「%s」%s' % (m.group(0)[:20], why)))
